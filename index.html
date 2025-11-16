@@ -50,7 +50,8 @@ window.uploadVideo = async function(){ const file=document.getElementById("video
 
 async function loadVideos(){ const list=document.getElementById("videoList"); list.innerHTML=""; const snap=await getDocs(collection(db,"videos")); snap.forEach(d=>{ const item=document.createElement("div"); item.className="video-item"; item.innerHTML=<b>${d.data().title}</b><br>${d.data().desc}; item.onclick=()=>play(d.data().url); list.appendChild(item); }); }
 
-window.play = function(url){ const player=document.getElementById("player"); player.src=url; player.classList.remove("hidden"); } </script>
+window.play = function(url){ const player=document.getElementById("player"); player.src=url; player.classList.remove("hidden"); } document.getElementById("menuBtn").addEventListener("click", () => { document.getElementById("menuPanel").classList.toggle("hidden"); });
 
+</script>
 </body>
 </html>
