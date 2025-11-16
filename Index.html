@@ -1,0 +1,56 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AnimeStream + Admin</title>
+<style>
+body{font-family:system-ui;background:#111827;color:#f3f4f6;margin:0}
+header{background:#1f2937;padding:18px;color:white;border-bottom:2px solid #ec4899}
+.container{max-width:1000px;margin:20px auto;padding:16px}
+.card{background:#1a2234;border-radius:10px;padding:14px;margin-bottom:12px}
+input,button,textarea{width:100%;padding:10px;border-radius:8px;background:#0f172a;color:white;border:1px solid #334155}
+button{background:#ec4899;font-weight:600;cursor:pointer}
+button:hover{background:#f472b6}
+.video-item{background:#1e293b;border:1px solid #334155;padding:10px;border-radius:8px;margin-bottom:10px;cursor:pointer}
+.admin-panel{border:2px solid #ec4899;padding:12px;border-radius:12px;margin-top:20px}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<header>
+<div style="display:flex;align-items:center;justify-content:space-between;">
+<h2>AnimeStream</h2>
+<div id="menuBtn" style="font-size:26px;cursor:pointer;">☰</div>
+</div>
+</header>
+<div id="menuPanel" class="hidden" style="background:#1f2937;padding:16px;border-bottom:2px solid #ec4899;"><div id="adminPanel" class="admin-panel hidden">
+<h3>ADMIN PANEL</h3>
+<input id="title" placeholder="Anime Title" />
+<textarea id="desc" placeholder="Description"></textarea>
+<input type="file" id="videoFile" />
+<button onclick="uploadVideo()">Upload Anime</button>
+</div>
+<h3>Daftar Anime</h3>
+<div id="videoList"></div>
+<video id="player" width="100%" controls class="hidden"></video>
+</div>
+<script type="module">document.getElementById("menuBtn").onclick = () => { document.getElementById("menuPanel").classList.toggle("hidden"); };
+
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"; import { getFirestore, doc, getDoc, setDoc, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"; import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+const firebaseConfig = {  apiKey:"AIzaSyAgOPD5DDtjExQaVeu6VLFI7CMP9i8VOQw", authDomain:"projectchat01-d16bc.firebaseapp.com", databaseURL:"https://projectchat01-d16bc-default-rtdb.firebaseio.com", projectId:"projectchat01-d16bc", storageBucket:"projectchat01-d16bc.appspot.com", messagingSenderId:"163313653543", appId:"1:163313653543:web:96964a67d43659ea11bb02", measurementId:"G-7GRLEHFSZ7" }; const app = initializeApp(firebaseConfig); const auth = getAuth(); const db = getFirestore(app); const storage = getStorage(app);
+
+async function isAdmin(uid){ const snap = await getDoc(doc(db,"config","admin")); return snap.exists() && snap.data().uid === uid; }
+
+window.login = async function(){ const email=document.getElementById("email").value; const pass=document.getElementById("password").value; await signInWithEmailAndPassword(auth,email,pass); } window.register = async function(){ const email=document.getElementById("email").value; const pass=document.getElementById("password").value; await createUserWithEmailAndPassword(auth,email,pass); }
+
+onAuthStateChanged(auth, async user =>{ if(user){ const adminPanel=document.getElementById("adminPanel"); if(await isAdmin(user.uid)) adminPanel.classList.remove("hidden"); loadVideos(); } });
+
+window.uploadVideo = async function(){ const file=document.getElementById("videoFile").files[0]; const title=document.getElementById("title").value; const desc=document.getElementById("desc").value; const storageRef=ref(storage,"anime/"+file.name); await uploadBytes(storageRef,file); const url=await getDownloadURL(storageRef); await addDoc(collection(db,"videos"),{title,desc,url}); loadVideos(); }
+
+async function loadVideos(){ const list=document.getElementById("videoList"); list.innerHTML=""; const snap=await getDocs(collection(db,"videos")); snap.forEach(d=>{ const item=document.createElement("div"); item.className="video-item"; item.innerHTML=<b>${d.data().title}</b><br>${d.data().desc}; item.onclick=()=>play(d.data().url); list.appendChild(item); }); }
+
+window.play = function(url){ const player=document.getElementById("player"); player.src=url; player.classList.remove("hidden"); } </script>
+
+</body>
+</html>
